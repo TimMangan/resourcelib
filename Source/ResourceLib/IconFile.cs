@@ -76,16 +76,18 @@ namespace Vestris.ResourceLib
         public void LoadFrom(string filename)
         {
             byte[] data = File.ReadAllBytes(filename);
-
-            IntPtr lpData = Marshal.AllocHGlobal(data.Length);
-            try
+            if (data != null && data.Length > 0)
             {
-                Marshal.Copy(data, 0, lpData, data.Length);
-                Read(lpData);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(lpData);
+                IntPtr lpData = Marshal.AllocHGlobal(data.Length);
+                try
+                {
+                    Marshal.Copy(data, 0, lpData, data.Length);
+                    Read(lpData, data.Length);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(lpData);
+                }
             }
         }
 
@@ -93,8 +95,9 @@ namespace Vestris.ResourceLib
         /// Read icons.
         /// </summary>
         /// <param name="lpData">Pointer to the beginning of a FILEGRPICONDIR structure.</param>
+        /// <param name="lpDataLength">Size of the lpData.</param>
         /// <returns>Pointer to the end of a FILEGRPICONDIR structure.</returns>
-        internal IntPtr Read(IntPtr lpData)
+        internal IntPtr Read(IntPtr lpData, int lpDataLength)
         {
             _icons.Clear();
 
@@ -106,8 +109,18 @@ namespace Vestris.ResourceLib
             for (int i = 0; i < _header.wCount; i++)
             {
                 IconFileIcon iconFileIcon = new IconFileIcon();
-                lpEntry = iconFileIcon.Read(lpEntry, lpData);
-                _icons.Add(iconFileIcon);
+                try
+                {
+                    lpEntry = iconFileIcon.Read(lpEntry, lpData, lpDataLength);
+                    if (!iconFileIcon.IsInvalid)
+                    {
+                        _icons.Add(iconFileIcon);
+                    }
+                } 
+                catch 
+                {
+                    ; // ignore bad files.
+                }
             }
 
             return lpEntry;

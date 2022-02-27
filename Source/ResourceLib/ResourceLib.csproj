@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net20;net35;net40;net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net48</TargetFrameworks>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild Condition="'$(APPVEYOR)' != '' And '$(APPVEYOR)'">true</GeneratePackageOnBuild>
@@ -17,6 +17,8 @@
     <Authors>dblock, icnocop, thoemmi</Authors>
     <AssemblyName>Vestris.ResourceLib</AssemblyName>
     <RootNamespace>Vestris.ResourceLib</RootNamespace>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>strongname.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -30,4 +32,9 @@
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="cmd.exe /c _CreateStrongName.cmd" />
+  </Target>
+
 </Project>

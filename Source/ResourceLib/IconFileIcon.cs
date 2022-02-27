@@ -17,6 +17,11 @@ namespace Vestris.ResourceLib
         private DeviceIndependentBitmap _image = new DeviceIndependentBitmap();
 
         /// <summary>
+        /// Indicates extraction was aborted.
+        /// </summary>
+        public bool IsInvalid = false;
+
+        /// <summary>
         /// Icon header.
         /// </summary>
         public Kernel32.FILEGRPICONDIRENTRY Header
@@ -88,15 +93,21 @@ namespace Vestris.ResourceLib
         /// </summary>
         /// <param name="lpData">Pointer to the beginning of this icon's data.</param>
         /// <param name="lpAllData">Pointer to the beginning of all icon data.</param>
+        /// <param name="lpAllDataLength">size of all icon data.</param>
         /// <returns>Pointer to the end of this icon's data.</returns>
-        internal IntPtr Read(IntPtr lpData, IntPtr lpAllData)
+        internal IntPtr Read(IntPtr lpData, IntPtr lpAllData, int lpAllDataLength)
         {
             _header = (Kernel32.FILEGRPICONDIRENTRY)Marshal.PtrToStructure(
                 lpData, typeof(Kernel32.FILEGRPICONDIRENTRY));
-
-            IntPtr lpImage = new IntPtr(lpAllData.ToInt64() + _header.dwFileOffset);
-            _image.Read(lpImage, _header.dwImageSize);
-
+            if (_header.dwImageSize < (uint)lpAllDataLength)
+            {
+                IntPtr lpImage = new IntPtr(lpAllData.ToInt64() + _header.dwFileOffset);
+                _image.Read(lpImage, _header.dwImageSize);
+            }
+            else
+            {
+                IsInvalid = true;
+            }
             return new IntPtr(lpData.ToInt64() + Marshal.SizeOf(_header));
         }
 
